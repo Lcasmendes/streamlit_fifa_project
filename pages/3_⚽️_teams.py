@@ -1,21 +1,34 @@
 import streamlit as st
+from datetime import datetime
+import pandas as pd
 
 st.set_page_config(
-    page_title="Players",
-    page_icon="🏃🏼",
-    layout="wide"
+    layout='wide',
 )
 
-df_data = st.session_state["data"]
+if "data" in st.session_state:
+    df_data = st.session_state["data"]
+else:
+    df_data = pd.read_csv("datasets/CLEAN_FIFA23_official_data.csv", index_col=0)
+    # Filtrando jogadores com contratos ainda validos - data de fim de contrato maior que hoje
+    df_data = df_data[df_data["Contract Valid Until"] >= datetime.today().year]
+    # Apenas jogadors com valores registrados
+    df_data = df_data[df_data["Value(£)"]>0]
+    df_data = df_data.sort_values(by='Overall', ascending=False)
+    st.session_state['data'] = df_data
 
-clubes = df_data["Club"].value_counts().index
+
+# Seletor na sidebar
+clubes = df_data['Club'].unique()
 club = st.sidebar.selectbox("Clube", clubes)
 
-df_filtered = df_data[(df_data["Club"] == club)].set_index("Name")
+df_filtered = df_data[df_data["Club"] == club].set_index("Name")
 
-st.image(df_filtered.iloc[0]["Club Logo"])
+# Página
+st.image(df_filtered.iloc[0]['Club Logo'])
 st.markdown(f"## {club}")
 
+# Tabela de jogadores
 columns = ["Age", "Photo", "Flag", "Overall", 'Value(£)', 'Wage(£)', 'Joined', 
            'Height(cm.)', 'Weight(lbs.)',
            'Contract Valid Until', 'Release Clause(£)']
