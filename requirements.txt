@@ -1,0 +1,4 @@
+streamlit
+webbrowser
+pandas
+datetime
